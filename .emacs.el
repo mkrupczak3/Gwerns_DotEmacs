@@ -1,4 +1,127 @@
+;.emacs.el --- my Emacs customizations
+;Copyright (C) 2006 by Gwern Branwen
+;License: Public domain
+;When:  Time-stamp: "2018-10-22 14:41:22 gwern"
+;Words: local,customization,emacs,gnu,dot,public domain
 
+;Commentary
+;;The first section sets and modifies stuff directly, invoking and tweaking
+;;packages and settings that come with a modern vanilla Emacs:  scrolling,
+;;key bindings, etc. The second section handles downloaded files and addons.
+;;The fourth section is reserved for Customize.
+
+;Table of contents
+;;1: EMACS
+;;2: PACKAGES
+;;3: CUSTOM
+
+;;;;;;;;;;;;;;;;
+;;; EMACS  ;;;;;
+;;;;;;;;;;;;;;;;
+; Ideally things would be done through Customization, but sometimes variables
+; or hooks just aren't setup to go through Customization. So they go in here.
+
+;Add the directory I keep all my special .el files in default load path.
+; (setq load-path (push "~/.emacs.d/" load-path))
+
+;Do without those obnoxious startup messages
+(setq inhibit-startup-echo-area-message (user-login-name))
+
+;Modify the mode-line as well. This is a cleaner setup than the
+;default settings for the mode-line.
+(setq mode-line-format
+      '("-"
+        mode-line-mule-info
+        mode-line-modified
+        mode-line-frame-identification
+        mode-line-buffer-identification
+        "  "
+        global-mode-string
+        "   %[(" mode-name mode-line-process minor-mode-alist "%n"
+        ")%]--"
+        (line-number-mode "L%l--")
+        (column-number-mode "C%c--")
+        (-3 . "%p")
+        "-%-"))
+
+; set window title to visited full-filename; useful for arbtt window-tracking statistics
+(setq frame-title-format "%f")
+
+(if (not window-system)
+    ;While we are getting rid of stuff, let's get rid of the buttons.
+    ;The menu is useful, so we will keep that (can be accessed by C-right click), but the
+    ;buttons are  redundant with the menu options, and I know most of the keybindings
+    ;for the buttons, anyway.
+    ;Turn off the status bar if we're not in a window system. I currently have it always off.
+    (menu-bar-mode t) ; else
+  (menu-bar-mode -1))
+
+;sp
+(add-hook 'markdown-mode-hook 'flyspell)
+;for toggling visibility of sections - makes big pages easier to work with
+(add-hook 'markdown-mode-hook 'outline-minor-mode)
+;In Markdown files, there are few excuses for unbalanced delimiters
+(defun balance-parens () (when buffer-file-name
+                           (add-hook 'after-save-hook
+                                     'check-parens
+                                     nil t)))
+(add-hook 'markdown-mode-hook   'balance-parens)
+(add-hook 'ledger-mode-hook     'balance-parens)
+(add-hook 'emacs-lisp-mode-hook 'balance-parens)
+(add-hook 'haskell-mode-hook    'balance-parens)
+
+;cleanup excerpts in Markdown files
+(defun de-unicode ()
+  "Replaces a subset of Unicode punctuation in the buffer with their ASCII
+equivalents. Most useful for Markdown mode."
+  (interactive
+  (save-excursion
+    (goto-char (point-min))
+    (replace-string "–" "-")
+    (replace-string "—" "-")
+    (replace-string "‐" "-")
+    (replace-string "­" "-")
+    (replace-string "­" "-")
+    (replace-string "‘" "'")
+    (replace-string "’" "'")
+    (replace-string "’" "'")
+    (replace-string "’" "'")
+    (replace-string "‛" "'")
+    (replace-string "" "'")
+    (replace-string "“" "\"")
+    (replace-string "”" "\"")
+    (replace-string "„" "\"")
+    (replace-string "ﬂ" "fl")
+    (replace-string "ﬁ" "fi")
+    (replace-string "…" "...")
+    (replace-string "‎" " ")
+    (replace-string "​" " ")
+    (replace-string "﻿" "")
+    (replace-string "·" ".")
+    (replace-string "•" "-")
+    (replace-string "" "-")
+    (replace-string "" "-")
+    nil)))
+(add-hook 'markdown-mode-hook
+          (lambda ()
+            (when buffer-file-name
+              (add-hook 'before-save-hook
+                        'de-unicode
+                        nil t))))
+
+;I like unusual semantic punctuation!
+;; interrobang: ‽ for replacing "?!"\"!?"
+(defun interrobang () (interactive (insert-char ?‽ 1)))
+;; sarcasm mark: ⸮ (better than '</sarcasm>' or '[!]', anyway)
+(defun irony () (interactive (insert-char ?⸮ 1)))
+(defalias 'sarcasm 'irony)
+(defun bitcoin () (interactive (insert-char ?฿ 1)))
+
+; mismatched quotes are no good either
+; <http://stackoverflow.com/questions/9527593/customizing-check-parens-to-check-double-quotes>
+(add-hook 'markdown-mode-hook (lambda () (modify-syntax-entry ?\" "\"" markdown-mode-syntax-table)))
+
+;Use ANSI colors within sh-mode
 (add-hook 'sh-mode-hook 'ansi-color-for-comint-mode-on)
 
 ;Enable narrowing of regions
