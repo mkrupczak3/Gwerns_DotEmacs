@@ -1,5 +1,5 @@
 # Gwerns_DotEmacs
-A re-hosting of gwern dot net's .emacs config file
+A re-hosting of gwern.net 's .emacs config file
 
 [https://en.wikipedia.org/wiki/User%3AGwern%2F.emacs](https://en.wikipedia.org/wiki/User%3AGwern%2F.emacs)
 
